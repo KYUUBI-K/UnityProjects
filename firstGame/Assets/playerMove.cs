@@ -6,6 +6,7 @@ public class playerMove : MonoBehaviour
 {
     public GameManager gm;
     public Rigidbody rb;
+    public GroundCheck gc;
    
     public float moveSpeed = 10;
     public float strafeSpeed = 5;
@@ -72,7 +73,7 @@ public class playerMove : MonoBehaviour
         {
             rb.AddForce(strafeSpeed * Time.deltaTime, 0, 0, ForceMode.VelocityChange);
         }
-        if(doJump)
+        if(doJump&&gc.stayGround)
         {
             rb.AddForce(Vector3.up * jump, ForceMode.Impulse);
             doJump = false;
