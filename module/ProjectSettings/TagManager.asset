@@ -4,13 +4,7 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Key1
-  - Key2
-  - Key3
-  - Door1
-  - Door2
-  - Door3
-  - finish
+  - Ground
   layers:
   - Default
   - TransparentFX
