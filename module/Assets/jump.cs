@@ -7,13 +7,8 @@ public class jump : MonoBehaviour
 
 
 
-    private void Jump()
-    {
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-        rb.AddForce(transform.forward * forwardForce, ForceMode.VelocityChange);
-    }
-    public float jumpForce = 10f;
-    public float forwardForce = 0.1f;
+    public float jumpForce = 6f;
+    public float forwardForce = 2f;
     private Rigidbody rb;
     private bool isGrounded;
 
@@ -34,6 +29,11 @@ public class jump : MonoBehaviour
             Jump();
             isGrounded = false;
         }
+    }
+    private void Jump()
+    {
+        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        rb.AddForce(transform.forward * forwardForce, ForceMode.VelocityChange);
     }
 
     void OnCollisionEnter(Collision collision)
