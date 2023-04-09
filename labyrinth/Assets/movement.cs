@@ -3,29 +3,45 @@ using UnityEngine;
 
 public class movement : MonoBehaviour
 {
-    public float moveSpeed = 10f;
-    private Vector3 moveVector;
-    private CharacterController ch_controller;
+    public GameManager gm;
+    [SerializeField] Transform playerCamera = null;
+    float cameraPitch = 0.0f;
+    CharacterController contr = null;
+    float speed = 100f;
+
     void Start()
     {
-        ch_controller= GetComponent<CharacterController>();
+        contr = GetComponent<CharacterController>();
     }
 
     void Update()
-    { 
-        CharacterMove();
-    }
-   
-    private void CharacterMove()
     {
-        moveVector = Vector3.zero;
-        moveVector.x = Input.GetAxis("Horizontal")* -moveSpeed;
-        moveVector.z = Input.GetAxis("Vertical")* -moveSpeed;
+        UpdateMouseLook();
+        UpdateMove();
+        if (Input.GetKey("r"))
+        {
+            gm.Reolad();
+        }
+    }
+    void UpdateMouseLook()
+    {
 
-        ch_controller.Move(moveVector * Time.deltaTime);
+        Vector2 mouse = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+        transform.Rotate(Vector3.up * mouse.x);
+        cameraPitch -= mouse.y;
+        cameraPitch = Mathf.Clamp(cameraPitch, -50.0f, 50.0f);
+        playerCamera.localEulerAngles = Vector3.right * cameraPitch;
+        transform.Rotate(Vector3.up * mouse.x);
 
     }
-   
+    void UpdateMove()
+    {
+        Vector2 inp = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")); 
+        inp.Normalize();
+        Vector3 velocity = ((-transform.forward) * inp.y + (-transform.right) * inp.x)*speed;
+        contr.Move(velocity * Time.deltaTime);
+    }
+
 
 
 
