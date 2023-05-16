@@ -4,79 +4,80 @@ using UnityEngine;
 
 public class playerMove : MonoBehaviour
 {
-    public GameManager gm;
-    public Rigidbody rb;
-    public GroundCheck gc;
-   
-    public float moveSpeed = 10;
-    public float strafeSpeed = 5;
-    public float jump = 1;
+    public float speed;
+    public float rotationSpeed;
+    public float jumpSpeed;
+    public float jumpButtonGracePeriod;
 
-    protected bool strafeLeft = false;
-    protected bool strafeRight = false;
-    protected bool doJump = false;
+    private Animator animator;
+    private CharacterController characterController;
+    private float ySpeed;
+    private float originalStepOffset;
+    private float? lastGroundedTime;
+    private float? jumpButtonPressedTime;
+    private bool isBackflip;
+    private bool isGrounded;
 
-    private void OnCollisionEnter(Collision collision)
+    void Start()
     {
-        if (collision.collider.tag == "Obstacle")
-        {
-            gm.EndGame();
-        }
-        if (collision.collider.tag == "finish")
-        {
-            gm.Win();
-        }
+        animator = GetComponent<Animator>();
+        characterController = GetComponent<CharacterController>();
+        originalStepOffset = characterController.stepOffset;
     }
 
     void Update()
     {
-        if (Input.GetKey("a")) 
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
+
+        Vector3 movementDirection = new Vector3(-horizontalInput, 0, -verticalInput);
+        float magnitude = Mathf.Clamp01(movementDirection.magnitude) * speed;
+        movementDirection.Normalize();
+
+        ySpeed += Physics.gravity.y * Time.deltaTime;
+
+        if (characterController.isGrounded)
         {
-            strafeLeft = true;
-        }
-        else
-        {
-            strafeLeft = false;
-        }
-        if (Input.GetKey("d"))
-        {
-            strafeRight = true;
-        }
-        else
-        {
-            strafeRight = false;
-        }
-        if (Input.GetKey("space"))
-        {
-            doJump = true;
-        }
-        else
-        {
-            doJump = false;
+            lastGroundedTime = Time.time;
         }
 
-        if (transform.position.y < -5)
+        if (Input.GetButtonDown("Jump"))
         {
-            gm.EndGame();
-        };
+            jumpButtonPressedTime = Time.time;
+        }
 
-        
-    }
-     void FixedUpdate()
-    {
-        rb.MovePosition(transform.position + Vector3.forward*moveSpeed*Time.deltaTime);
-        if (strafeLeft)
+        if (Time.time - lastGroundedTime <= jumpButtonGracePeriod)
         {
-            rb.AddForce(-strafeSpeed * Time.deltaTime, 0, 0, ForceMode.VelocityChange);
+            characterController.stepOffset = originalStepOffset;
+            ySpeed = -0.5f;
+            animator.SetBool("IsBackflip", false);
+            isBackflip = false;
+
+            if (Time.time - jumpButtonPressedTime <= jumpButtonGracePeriod)
+            {
+                ySpeed = jumpSpeed;
+                jumpButtonPressedTime = null;
+                animator.SetBool("IsBackflip", true);
+                isBackflip = true;
+                lastGroundedTime = null;
+            }
         }
-        if (strafeRight)
+
+        Vector3 velocity = movementDirection * magnitude;
+        velocity.y = ySpeed;
+
+        characterController.Move(velocity * Time.deltaTime);
+
+        if (movementDirection != Vector3.zero)
         {
-            rb.AddForce(strafeSpeed * Time.deltaTime, 0, 0, ForceMode.VelocityChange);
+            animator.SetBool("IsMoving", true);
+            Quaternion toRotation = Quaternion.LookRotation(movementDirection, Vector3.up);
+
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
-        if(doJump&&gc.stayGround)
+        else
         {
-            rb.AddForce(Vector3.up * jump, ForceMode.Impulse);
-            doJump = false;
+            animator.SetBool("IsMoving", false);
         }
     }
 }
